@@ -1,4 +1,4 @@
-package CAO;
+package CAO_AlertesSurEnchere;
 
 public class Alerte {
 

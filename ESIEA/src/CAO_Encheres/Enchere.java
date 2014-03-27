@@ -1,7 +1,9 @@
-package CAO;
+package CAO_Encheres;
 
 import java.util.ArrayList;
 import java.util.Date;
+
+import CAO_UtilisateurDuSysteme.Utilisateur;
 
 public class Enchere {
 
@@ -10,8 +12,10 @@ public class Enchere {
 	private double prixMinimum;
 	private double prixDeReserve;
 	private ETAT etat;
+	public static ArrayList<Enchere> listeEnchere;
+	private Objet objet;
 	
-	public Enchere(ArrayList<Enchere> listeEnchere,ETAT etat, Utilisateur createur, Enchere enchere, Date dateLimite, double prixMinimum,double prixDeReserve, String identifiant, String description) {
+	public Enchere(ArrayList<Enchere> listeEnchere,ETAT etat, Utilisateur createur, Date dateLimite, double prixMinimum,double prixDeReserve, String identifiant, String description) {
 		// TODO Auto-generated constructor stub
 		//modif liste Enchere
 		this.etat=etat;
@@ -19,11 +23,12 @@ public class Enchere {
 		this.dateLimite=dateLimite;
 		this.prixMinimum=prixMinimum;
 		this.prixDeReserve=prixDeReserve;
-		Objet objet=new Objet(identifiant,description);
+		objet=new Objet(identifiant,description);
+		this.listeEnchere=listeEnchere;
 	}
 	
 	public Utilisateur getCreateur() {
-		return createur;
+		return this.createur;
 	}
 
 	public double getPrixDeReserve(Utilisateur utilisateur) {

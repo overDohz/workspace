@@ -1,7 +1,10 @@
-package CAO;
+package CAO_Encheres;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import CAO_AlertesSurEnchere.Alerte;
+import CAO_UtilisateurDuSysteme.Utilisateur;
 
 public class Offre {
 
@@ -25,9 +28,9 @@ public class Offre {
 //			}
 		}
 	}
-	private boolean existeUtilisateur(){
-		return true;
-	}
+//	private boolean existeUtilisateur(){
+//		return true;
+//	}
 
 	public double getPrix() {
 		return prix;

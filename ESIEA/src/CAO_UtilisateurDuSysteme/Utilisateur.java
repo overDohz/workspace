@@ -1,11 +1,13 @@
-package CAO;
+package CAO_UtilisateurDuSysteme;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import CAO.Enchere.ETAT;
+import CAO_Encheres.Enchere;
+import CAO_Encheres.Offre;
+import CAO_Encheres.Enchere.ETAT;
 
 public class Utilisateur implements Acheteur,Vendeur{
 	
@@ -16,13 +18,9 @@ public class Utilisateur implements Acheteur,Vendeur{
 	private Enchere enchere;
 	private Date dateActuelle;
 	private GregorianCalendar calendrier;
-	ArrayList<Enchere> listeEnchere;
-	ArrayList<Offre> listeOffre;
-	
-	public static void main(String Args[]){
-		
-		
-	}
+	//pour garder en mémoire, en réalité ces tableaux n'existent pas ils sont dans le SQL
+	public static ArrayList<Enchere> listeEnchere;
+	public static ArrayList<Offre> listeOffre;
 	
 	public Utilisateur(String login, ROLE role) {
 		this.login=login;
@@ -49,14 +47,12 @@ public class Utilisateur implements Acheteur,Vendeur{
 		return login;
 	}
 
-	public void setLogin(String login) {
-		this.login = login;
-	}
-
 	public String getRole() {
 		return role;
 	}
 
+//	Plusieurs possibilités... exemple 2 solutions: Soit on crée une fois un utilisateur et on le permute soit on fait la distinction avec le login
+//	Ici choix de la solution 2
 	public void setRole(String role) {
 		this.role = role;
 	}
@@ -67,35 +63,32 @@ public class Utilisateur implements Acheteur,Vendeur{
 		this.nom=nom;
 		this.prenom=prenom;
 	}
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - -	
-//	public boolean estVendeur(){
-//		return this.role=="VENDEUR";
-//	}
 	
-	public String creerEnchere(Date dateLimite, ETAT etat,int prixMinimum,int prixDeReserve, String identifiant, String description){
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - Partie VENDEUR
+	
+	public void creerEnchere(Date dateLimite, ETAT etat,int prixMinimum,int prixDeReserve, String identifiant, String description, ArrayList<Enchere> listeEnchere){
 		//check si vendeur
 		calendrier = new GregorianCalendar(2014, Calendar.JANUARY, 01);
 		dateActuelle=calendrier.getTime();
 		if(dateLimite.after(dateActuelle) && prixMinimum>0 && prixDeReserve>=prixMinimum){
 			if(listeEnchere!=null){
-					this.enchere=new Enchere(listeEnchere,ETAT.CREEE,this,null,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
-					listeEnchere.add(enchere);
-				}else{
-					listeEnchere = new ArrayList<Enchere>();
-					this.enchere=new Enchere(listeEnchere,ETAT.CREEE,this,null,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
-					listeEnchere.add(enchere);
-				}				
+					this.enchere=new Enchere(this.listeEnchere,ETAT.CREEE,this,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
+					this.listeEnchere.add(enchere);
+			}else{
+					this.listeEnchere = new ArrayList<Enchere>();
+					this.enchere=new Enchere(this.listeEnchere,ETAT.CREEE,this,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
+					this.listeEnchere.add(enchere);
+			}
 		}
-		
-		return "";
 	}
+
 	public ArrayList<Enchere> listeEnchere(){
 		return listeEnchere;
 	}
 	
 	public void publierEnchere(Enchere enchere){
 		//check si vendeur
-		if (enchere.getEtat()==ETAT.CREEE){
+		if (enchere.getEtat()==ETAT.CREEE && this.getLogin()==enchere.getCreateur().getLogin()){
 			enchere.setEtat(ETAT.PUBLIEE);
 		}
 		
@@ -104,43 +97,52 @@ public class Utilisateur implements Acheteur,Vendeur{
 	public void annulerEnchere(Enchere enchere){
 		//checker si offre avec prix de reserve existe
 //		&& enchere.PrixDeReserveNonAtteint() 
-		if (enchere!=null && enchere.getEtat()==ETAT.PUBLIEE  ){
+//		 System.out.println(this);
+//		 System.out.println(enchere.getCreateur());
+//		 && enchere.getCreateur().equals(this)
+		if (enchere!=null && enchere.getEtat()==ETAT.PUBLIEE && this.getLogin()==enchere.getCreateur().getLogin()){
 			enchere.setEtat(ETAT.ANNULEE);
 		}
 	}
 	
-	public void afficherEncheres(){
-	
-	}
-	
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - -	
-//	public boolean estAcheteur(){
-//		return this.role=="ACHETEUR";
-//	}
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - Partie ACHETEUR
 	
 	public void emettreOffre(double prix, Enchere enchere, ArrayList<Offre> listeOffre){
-		//check si acheteur et enchere publiée
-		 this.listeOffre=listeOffre;
-		if( this!=enchere.getCreateur() && enchere.getEtat()==ETAT.PUBLIEE &&  prix>rechercheMeilleurOffre()){
+//		check :
+//		- si acheteur, 
+//		- enchere publiée, 
+//		- si acheteur!= createur, 
+//		- prixProposé>prixDejaPropose
+		this.listeOffre=listeOffre;
+//		this!=enchere.getCreateur()
+		if(this.getLogin()!=enchere.getCreateur().getLogin() && enchere.getEtat()==ETAT.PUBLIEE &&  prix>rechercheMeilleurOffre() && prix>enchere.getPrixMinimum()){
+//			System.out.println(this.getLogin());
+//			System.out.println(enchere.getCreateur().getLogin());
+//			System.out.println(enchere.getEtat());
+//			System.out.println(prix);
+//			System.out.println(enchere.getPrixMinimum());
+			
 			if(listeOffre!=null){
-				System.out.println("ajout fait");
+//				System.out.println("ajout fait");
 				this.listeOffre.add(new Offre(this, prix, enchere));
 			}else{
 				this.listeOffre = new ArrayList<Offre>();
 				this.listeOffre.add(new Offre(this, prix, enchere));
-				System.out.println("creation ok");
+//				System.out.println("creation ok");
 			}		
 		}
 	}
-	public ArrayList<Offre> listeOffre(){
-//		Iterator<Offre> it = listeOffre.iterator();
-//		 while(it.hasNext()){
-//			 System.out.println(it.next());
-//		 	return it.next();
-//		 }
-//		 return null;
-		return this.listeOffre;
-	}
+	
+//	public ArrayList<Offre> listeOffre(){
+////		Iterator<Offre> it = listeOffre.iterator();
+////		 while(it.hasNext()){
+////			 System.out.println(it.next());
+////		 	return it.next();
+////		 }
+////		 return null;
+//		return this.listeOffre;
+//	}
+	
 	public double rechercheMeilleurOffre(){
 		if(listeOffre!=null){
 			double prixLePlusEleve=listeOffre.get(0).getPrix();
@@ -153,12 +155,11 @@ public class Utilisateur implements Acheteur,Vendeur{
 		}
 		return 0;
 	}
-	public boolean existeEnchere(){
-		return false;
-	}
+	
 	public boolean existeOffre(){
 		return listeOffre!=null;
 	}
+	
 	public String creerAlerte(){
 		//checker si acheteur
 		return "";
@@ -195,12 +196,6 @@ public class Utilisateur implements Acheteur,Vendeur{
 		ACHETEUR, VENDEUR
 	}
 
-//	public static Date date(){
-//		Date aujourdhui=new Date();
-//		
-//		return aujourdhui;
-//	}
-	
 	@Override
 	public String toString() {
 		return "Utilisateur [nom=" + nom + ", prenom=" + prenom + ", login="
