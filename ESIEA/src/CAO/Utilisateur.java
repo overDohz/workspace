@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Iterator;
 
 import CAO.Enchere.ETAT;
 
@@ -73,31 +72,30 @@ public class Utilisateur implements Acheteur,Vendeur{
 //		return this.role=="VENDEUR";
 //	}
 	
-	public String creerEnchere(Date dateLimite, boolean estPubliee,int prixMinimum,int prixDeReserve, String identifiant, String description){
+	public String creerEnchere(Date dateLimite, ETAT etat,int prixMinimum,int prixDeReserve, String identifiant, String description){
 		//check si vendeur
 		calendrier = new GregorianCalendar(2014, Calendar.JANUARY, 01);
 		dateActuelle=calendrier.getTime();
-//		
-		if(dateLimite.compareTo(dateActuelle)<=0 && prixMinimum>0 && prixDeReserve>=prixMinimum){
-					if(!listeEnchere.isEmpty()){
-						this.enchere=new Enchere(listeEnchere,ETAT.CREEE,this,null,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
-						listeEnchere.add(enchere);
-					}else{
-						listeEnchere = new ArrayList<Enchere>();
-						this.enchere=new Enchere(listeEnchere,ETAT.CREEE,this,null,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
-						listeEnchere.add(enchere);
-						System.out.println("enchere cree");
-					}
-					
+		if(dateLimite.after(dateActuelle) && prixMinimum>0 && prixDeReserve>=prixMinimum){
+			if(listeEnchere!=null){
+					this.enchere=new Enchere(listeEnchere,ETAT.CREEE,this,null,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
+					listeEnchere.add(enchere);
+				}else{
+					listeEnchere = new ArrayList<Enchere>();
+					this.enchere=new Enchere(listeEnchere,ETAT.CREEE,this,null,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
+					listeEnchere.add(enchere);
+				}				
 		}
-		System.out.println("enchere non cree");
 		
 		return "";
+	}
+	public ArrayList<Enchere> listeEnchere(){
+		return listeEnchere;
 	}
 	
 	public void publierEnchere(Enchere enchere){
 		//check si vendeur
-		if (enchere.getEtat()==ETAT.PUBLIEE){
+		if (enchere.getEtat()==ETAT.CREEE){
 			enchere.setEtat(ETAT.PUBLIEE);
 		}
 		
@@ -105,7 +103,8 @@ public class Utilisateur implements Acheteur,Vendeur{
 	
 	public void annulerEnchere(Enchere enchere){
 		//checker si offre avec prix de reserve existe
-		if (enchere.getEtat()==ETAT.PUBLIEE && enchere.PrixDeReserveNonAtteint()){
+//		&& enchere.PrixDeReserveNonAtteint() 
+		if (enchere!=null && enchere.getEtat()==ETAT.PUBLIEE  ){
 			enchere.setEtat(ETAT.ANNULEE);
 		}
 	}
@@ -119,41 +118,46 @@ public class Utilisateur implements Acheteur,Vendeur{
 //		return this.role=="ACHETEUR";
 //	}
 	
-	public void emettreOffre(double prix, Enchere enchere){
+	public void emettreOffre(double prix, Enchere enchere, ArrayList<Offre> listeOffre){
 		//check si acheteur et enchere publiée
-		if(this!=enchere.getCreateur() && enchere.getEtat()==ETAT.PUBLIEE){
-			if(!listeEnchere.isEmpty()){
-				Offre offre = new Offre(this, prix, enchere,listeOffre);
-				listeOffre.add(offre);
+		 this.listeOffre=listeOffre;
+		if( this!=enchere.getCreateur() && enchere.getEtat()==ETAT.PUBLIEE &&  prix>rechercheMeilleurOffre()){
+			if(listeOffre!=null){
+				System.out.println("ajout fait");
+				this.listeOffre.add(new Offre(this, prix, enchere));
 			}else{
-				listeOffre = new ArrayList<Offre>();
-				Offre offre = new Offre(this, prix, enchere,listeOffre);
-				listeOffre.add(offre);
+				this.listeOffre = new ArrayList<Offre>();
+				this.listeOffre.add(new Offre(this, prix, enchere));
+				System.out.println("creation ok");
 			}		
 		}
 	}
-	public void listeOffre(){
-		Iterator<Offre> it = listeOffre.iterator();
-		 while(it.hasNext()){
-			 System.out.println(it.next());
+	public ArrayList<Offre> listeOffre(){
+//		Iterator<Offre> it = listeOffre.iterator();
+//		 while(it.hasNext()){
+//			 System.out.println(it.next());
 //		 	return it.next();
-		 }
+//		 }
 //		 return null;
+		return this.listeOffre;
 	}
-	public double rechercheOffre(){
-		double prixLePlusEleve=listeOffre.get(0).getPrix();
-		for(int i = 1 ; i < listeOffre.size(); i++){
-			if(listeOffre.get(i).getPrix()>listeOffre.get(i-1).getPrix()){
-				prixLePlusEleve=listeOffre.get(i).getPrix();
+	public double rechercheMeilleurOffre(){
+		if(listeOffre!=null){
+			double prixLePlusEleve=listeOffre.get(0).getPrix();
+			for(int i = 1 ; i < listeOffre.size(); i++){
+				if(listeOffre.get(i).getPrix()>listeOffre.get(i-1).getPrix()){
+					prixLePlusEleve=listeOffre.get(i).getPrix();
+				}
 			}
+			return prixLePlusEleve;
 		}
-		return prixLePlusEleve;
+		return 0;
 	}
 	public boolean existeEnchere(){
 		return false;
 	}
 	public boolean existeOffre(){
-		return false;
+		return listeOffre!=null;
 	}
 	public String creerAlerte(){
 		//checker si acheteur
@@ -191,11 +195,11 @@ public class Utilisateur implements Acheteur,Vendeur{
 		ACHETEUR, VENDEUR
 	}
 
-	public static Date date(){
-		Date aujourdhui=new Date();
-		
-		return aujourdhui;
-	}
+//	public static Date date(){
+//		Date aujourdhui=new Date();
+//		
+//		return aujourdhui;
+//	}
 	
 	@Override
 	public String toString() {

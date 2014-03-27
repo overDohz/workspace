@@ -9,8 +9,8 @@ public class Offre {
 	private double prix;
 	private Enchere enchere;
 //	ArrayList<Offre> listeOffre;
-
-	public Offre(Utilisateur utilisateur, double prix, Enchere enchere,ArrayList<Offre> listeOffre) {
+//,ArrayList<Offre> listeOffre
+	public Offre(Utilisateur utilisateur, double prix, Enchere enchere) {
 		if (prix>0.0){
 			this.utilisateur=utilisateur;
 			this.prix=prix;
@@ -18,11 +18,11 @@ public class Offre {
 			
 			Alerte alerte=new Alerte();
 			
-			if (!listeOffre.isEmpty()){
-				listeOffre = new ArrayList<Offre>();
-			}else{
-				listeOffre.add(this);
-			}
+//			if (!listeOffre.isEmpty()){
+//				listeOffre = new ArrayList<Offre>();
+//			}else{
+//				listeOffre.add(this);
+//			}
 		}
 	}
 	private boolean existeUtilisateur(){

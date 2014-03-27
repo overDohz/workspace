@@ -36,8 +36,13 @@ public class Enchere {
 	}
 	
 	public boolean PrixDeReserveNonAtteint(){
-		if (prixDeReserve>createur.rechercheOffre()){
-			return true;
+//		if (prixDeReserve>createur.rechercheMeilleurOffre()){
+//			return true;
+//		}else{
+//			return false;
+//		}
+		if(createur.existeOffre()){
+			return prixDeReserve>createur.rechercheMeilleurOffre();
 		}else{
 			return false;
 		}
