@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import CAO_AlertesSurEnchere.AlerteObserver;
 import CAO_Encheres.Enchere;
 import CAO_Encheres.Enchere.ETAT;
 import CAO_UtilisateurDuSysteme.Utilisateur;
@@ -29,6 +30,8 @@ public class AcheteurTest {
 //	private static ArrayList<Enchere> listeEnchere;
 	private Enchere enchere;
 //	private ArrayList<Offre> listeOffre;
+	private AlerteObserver alerteObserver;
+	private ArrayList<String> listeNotification;
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 	}
@@ -48,7 +51,9 @@ public class AcheteurTest {
 		d=calendar.getTime();
 		calendar2 = new GregorianCalendar(2013, Calendar.MARCH, 26);
 		d2=calendar2.getTime();
-		enchere = new Enchere(Utilisateur.listeEnchere,ETAT.CREEE, AVen, d, 1,2, "id","desc");
+//		enchere = new Enchere(Utilisateur.listeEnchere,ETAT.CREEE, AVen, d, 1,2, "id","desc");
+		alerteObserver=null;
+		listeNotification=null;
 	}
 
 	@After
@@ -59,19 +64,19 @@ public class AcheteurTest {
 	public void testEmissionsOffres() {
 		Utilisateur.listeEnchere=null;
 		Utilisateur.listeOffre=null;
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere, alerteObserver, listeNotification);
 		AVen.publierEnchere(Utilisateur.listeEnchere.get(0));
-		BAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre);
-		CAch.emettreOffre(2, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre);
+		BAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre, alerteObserver);
+		CAch.emettreOffre(2, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre, alerteObserver);
 		assertFalse(Utilisateur.listeOffre.isEmpty());
 	}
 	@Test
 	public void testEmissionOffreMauvaisPrix() {
 		Utilisateur.listeEnchere=null;
 		Utilisateur.listeOffre=null;
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere,alerteObserver, listeNotification);
 		AVen.publierEnchere(Utilisateur.listeEnchere.get(0));
-		CAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre);
+		CAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre, alerteObserver);
 		assertTrue(Utilisateur.listeOffre==null);
 	}
 	
@@ -79,17 +84,17 @@ public class AcheteurTest {
 	public void testEmissionOffreMauvaiseUtilisateur() {
 		Utilisateur.listeEnchere=null;
 		Utilisateur.listeOffre=null;
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere,alerteObserver, listeNotification);
 		AVen.publierEnchere(Utilisateur.listeEnchere.get(0));
-		AAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre);
+		AAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre, alerteObserver);
 		assertTrue(Utilisateur.listeOffre==null);
 	}
 	@Test
 	public void testEmissionOffreNonPubliee() {
 		Utilisateur.listeEnchere=null;
 		Utilisateur.listeOffre=null;
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
-		BAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere,alerteObserver, listeNotification);
+		BAch.emettreOffre(1, Utilisateur.listeEnchere.get(0), Utilisateur.listeOffre, alerteObserver);
 		assertTrue(Utilisateur.listeOffre==null);
 	}
 

@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 
+import CAO_AlertesSurEnchere.Alerte;
+import CAO_AlertesSurEnchere.Alerte.NOTIFICATION;
+import CAO_AlertesSurEnchere.AlerteObserver;
 import CAO_Encheres.Enchere;
-import CAO_Encheres.Offre;
 import CAO_Encheres.Enchere.ETAT;
+import CAO_Encheres.Offre;
 
 public class Utilisateur implements Acheteur,Vendeur{
 	
@@ -21,6 +25,9 @@ public class Utilisateur implements Acheteur,Vendeur{
 	//pour garder en mémoire, en réalité ces tableaux n'existent pas ils sont dans le SQL
 	public static ArrayList<Enchere> listeEnchere;
 	public static ArrayList<Offre> listeOffre;
+	public Alerte alerte,alertePrix,alerteAnnulee,alerteoOffreSup;
+	public ArrayList<String> listeNotification;
+//	public
 	
 	public Utilisateur(String login, ROLE role) {
 		this.login=login;
@@ -66,26 +73,38 @@ public class Utilisateur implements Acheteur,Vendeur{
 	
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - Partie VENDEUR
 	
-	public void creerEnchere(Date dateLimite, ETAT etat,int prixMinimum,int prixDeReserve, String identifiant, String description, ArrayList<Enchere> listeEnchere){
+	@Override
+	public void creerEnchere(Date dateLimite, ETAT etat,int prixMinimum,int prixDeReserve, String identifiant, String description, ArrayList<Enchere> listeEnchere, AlerteObserver alerteObserver,ArrayList<String> listeNotification){
 		//check si vendeur
 		calendrier = new GregorianCalendar(2014, Calendar.JANUARY, 01);
 		dateActuelle=calendrier.getTime();
 		if(dateLimite.after(dateActuelle) && prixMinimum>0 && prixDeReserve>=prixMinimum){
 			if(listeEnchere!=null){
-					this.enchere=new Enchere(this.listeEnchere,ETAT.CREEE,this,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
-					this.listeEnchere.add(enchere);
+					this.enchere=new Enchere(Utilisateur.listeEnchere,ETAT.CREEE,this,dateLimite,prixMinimum,prixDeReserve,identifiant,description,alerteObserver);
+					Utilisateur.listeEnchere.add(enchere);
+					this.listeNotification=listeNotification;
 			}else{
-					this.listeEnchere = new ArrayList<Enchere>();
-					this.enchere=new Enchere(this.listeEnchere,ETAT.CREEE,this,dateLimite,prixMinimum,prixDeReserve,identifiant,description);
-					this.listeEnchere.add(enchere);
+					Utilisateur.listeEnchere = new ArrayList<Enchere>();
+					this.enchere=new Enchere(Utilisateur.listeEnchere,ETAT.CREEE,this,dateLimite,prixMinimum,prixDeReserve,identifiant,description,alerteObserver);
+					Utilisateur.listeEnchere.add(enchere);
+					this.listeNotification=listeNotification;
 			}
 		}
+	}
+
+	public ArrayList<String> getListeNotification() {
+		return listeNotification;
+	}
+
+	public void setListeNotification(ArrayList<String> listeNotification) {
+		this.listeNotification = listeNotification;
 	}
 
 	public ArrayList<Enchere> listeEnchere(){
 		return listeEnchere;
 	}
 	
+	@Override
 	public void publierEnchere(Enchere enchere){
 		//check si vendeur
 		if (enchere.getEtat()==ETAT.CREEE && this.getLogin()==enchere.getCreateur().getLogin()){
@@ -94,6 +113,7 @@ public class Utilisateur implements Acheteur,Vendeur{
 		
 	}
 	
+	@Override
 	public void annulerEnchere(Enchere enchere){
 		//checker si offre avec prix de reserve existe
 //		&& enchere.PrixDeReserveNonAtteint() 
@@ -107,27 +127,22 @@ public class Utilisateur implements Acheteur,Vendeur{
 	
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - Partie ACHETEUR
 	
-	public void emettreOffre(double prix, Enchere enchere, ArrayList<Offre> listeOffre){
+	@Override
+	public void emettreOffre(double prix, Enchere enchere, ArrayList<Offre> listeOffre, AlerteObserver alerteObserver){
 //		check :
 //		- si acheteur, 
 //		- enchere publiée, 
 //		- si acheteur!= createur, 
 //		- prixProposé>prixDejaPropose
-		this.listeOffre=listeOffre;
+		Utilisateur.listeOffre=listeOffre;
 //		this!=enchere.getCreateur()
-		if(this.getLogin()!=enchere.getCreateur().getLogin() && enchere.getEtat()==ETAT.PUBLIEE &&  prix>rechercheMeilleurOffre() && prix>enchere.getPrixMinimum()){
-//			System.out.println(this.getLogin());
-//			System.out.println(enchere.getCreateur().getLogin());
-//			System.out.println(enchere.getEtat());
-//			System.out.println(prix);
-//			System.out.println(enchere.getPrixMinimum());
-			
+		if(this.getLogin()!=enchere.getCreateur().getLogin() && enchere.getEtat()==ETAT.PUBLIEE &&  prix>rechercheMeilleurOffre() && prix>enchere.getPrixMinimum()){	
 			if(listeOffre!=null){
 //				System.out.println("ajout fait");
-				this.listeOffre.add(new Offre(this, prix, enchere));
+				Utilisateur.listeOffre.add(new Offre(this, prix, enchere,alerteObserver));
 			}else{
-				this.listeOffre = new ArrayList<Offre>();
-				this.listeOffre.add(new Offre(this, prix, enchere));
+				Utilisateur.listeOffre = new ArrayList<Offre>();
+				Utilisateur.listeOffre.add(new Offre(this, prix, enchere,alerteObserver));
 //				System.out.println("creation ok");
 			}		
 		}
@@ -143,6 +158,7 @@ public class Utilisateur implements Acheteur,Vendeur{
 //		return this.listeOffre;
 //	}
 	
+	@Override
 	public double rechercheMeilleurOffre(){
 		if(listeOffre!=null){
 			double prixLePlusEleve=listeOffre.get(0).getPrix();
@@ -160,9 +176,25 @@ public class Utilisateur implements Acheteur,Vendeur{
 		return listeOffre!=null;
 	}
 	
-	public String creerAlerte(){
+	@Override
+	public Alerte creerAlerte(Alerte.NOTIFICATION notification , Enchere enchere, HashSet<Alerte> listeAlerte){
 		//checker si acheteur
-		return "";
+		if(true){
+			this.alerte = new Alerte(this, Alerte.NOTIFICATION.ENCHEREANNULEE, enchere);
+		}
+		Alerte.NOTIFICATION notif=NOTIFICATION.ENCHEREANNULEE;
+		if(true){
+			if(listeAlerte!=null){
+				this.alerte=new Alerte(this, Alerte.NOTIFICATION.ENCHEREANNULEE, enchere);
+				listeAlerte.add(alerte);
+			}else{
+//				listeAlerte=new ;
+				this.alerte=new Alerte(this, Alerte.NOTIFICATION.ENCHEREANNULEE, enchere);
+				listeAlerte.add(alerte);
+			}
+		}
+		
+		return this.alerte;
 	}
 	
 //	public String desactiverTouteAlerte(){
@@ -170,22 +202,28 @@ public class Utilisateur implements Acheteur,Vendeur{
 //		return "";
 //	}
 	
-	public String desactiverAlerte(int i){
+	@Override
+	public void desactiverAlerte(int i){
 		switch(i){
 		case 1:
 			//supp alerte sur prix de reserve
+			alertePrix=null;
 			break;
 		case 2:
 			//supp alerte sur annulerEnchere
+			alerteAnnulee=null;
 			break;
 		case 3:
 			//supp alerte sur offre supérieure concurrente
+			alerteoOffreSup=null;
 			break;
 		default:
 			//supprimer toutes les alertes
+			alertePrix=null;
+			alerteAnnulee=null;
+			alerteoOffreSup=null;
 			break;
 		}
-		return "";
 	}
 	
 //	public String supprimerEnchere(){

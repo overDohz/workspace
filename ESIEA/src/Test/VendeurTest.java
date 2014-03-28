@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -16,6 +17,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import CAO_AlertesSurEnchere.AlerteObserver;
 import CAO_Encheres.Enchere;
 import CAO_Encheres.Enchere.ETAT;
 import CAO_UtilisateurDuSysteme.Utilisateur;
@@ -30,6 +32,8 @@ public class VendeurTest {
 	private GregorianCalendar calendar2;
 //	private static ArrayList<Enchere> listeEnchere;
 	private Enchere enchere;
+	private AlerteObserver alerteObserver;
+	private ArrayList<String> listeNotification;
 //	private ArrayList<Offre> listeOffre;
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -50,7 +54,7 @@ public class VendeurTest {
 		d=calendar.getTime();
 		calendar2 = new GregorianCalendar(2013, Calendar.MARCH, 26);
 		d2=calendar2.getTime();
-		enchere = new Enchere(Utilisateur.listeEnchere,ETAT.CREEE, AVen, d, 1,2, "id","desc");
+		enchere = new Enchere(Utilisateur.listeEnchere,ETAT.CREEE, AVen, d, 1,2, "id","desc", alerteObserver);
 	}
 
 	@After
@@ -59,7 +63,7 @@ public class VendeurTest {
 
 	@Test
 	public void testCreationEnchere() {
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere, alerteObserver, listeNotification);
 		assertFalse(AVen.listeEnchere().isEmpty() || (AVen.listeEnchere()==null));
 		Utilisateur.listeEnchere=null;
 	}
@@ -67,20 +71,20 @@ public class VendeurTest {
 	@Test
 	public void testCreationEnchereMauvaisPrix() {
 		Utilisateur.listeEnchere=null;
-		AVen.creerEnchere(d, ETAT.CREEE,10,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,10,2, "id", "desc",Utilisateur.listeEnchere, alerteObserver, listeNotification);
 		assertTrue(Utilisateur.listeEnchere==null);
 	}
 	
 	@Test
 	public void testCreationEnchereMauvaiseDate() {
 		Utilisateur.listeEnchere=null;
-		AVen.creerEnchere(d2, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d2, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere, alerteObserver, listeNotification);
 		assertTrue(Utilisateur.listeEnchere==null);
 	}
 	@Test
 	public void testPublicationEnchere(){
 		Utilisateur.listeEnchere=null;
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere, alerteObserver, listeNotification);
 		AVen.publierEnchere(Utilisateur.listeEnchere.get(0));
 		assertEquals(ETAT.PUBLIEE, Utilisateur.listeEnchere.get(0).getEtat());
 	}
@@ -88,7 +92,7 @@ public class VendeurTest {
 	@Test
 	public void testPublicationEnchereMauvaisUtilisateur(){
 		Utilisateur.listeEnchere=null;
-		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere);
+		AVen.creerEnchere(d, ETAT.CREEE,1,2, "id", "desc",Utilisateur.listeEnchere, alerteObserver, listeNotification);
 		BVen.publierEnchere(Utilisateur.listeEnchere.get(0));
 		assertNotEquals(ETAT.PUBLIEE, Utilisateur.listeEnchere.get(0).getEtat());
 	}

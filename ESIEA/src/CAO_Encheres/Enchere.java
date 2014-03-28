@@ -2,10 +2,12 @@ package CAO_Encheres;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Observable;
 
+import CAO_AlertesSurEnchere.AlerteObserver;
 import CAO_UtilisateurDuSysteme.Utilisateur;
 
-public class Enchere {
+public class Enchere extends Observable{
 
 	private Utilisateur createur;
 	private Date dateLimite;
@@ -15,7 +17,7 @@ public class Enchere {
 	public static ArrayList<Enchere> listeEnchere;
 	private Objet objet;
 	
-	public Enchere(ArrayList<Enchere> listeEnchere,ETAT etat, Utilisateur createur, Date dateLimite, double prixMinimum,double prixDeReserve, String identifiant, String description) {
+	public Enchere(ArrayList<Enchere> listeEnchere,ETAT etat, Utilisateur createur, Date dateLimite, double prixMinimum,double prixDeReserve, String identifiant, String description, AlerteObserver alerteObserver) {
 		// TODO Auto-generated constructor stub
 		//modif liste Enchere
 		this.etat=etat;
@@ -24,7 +26,8 @@ public class Enchere {
 		this.prixMinimum=prixMinimum;
 		this.prixDeReserve=prixDeReserve;
 		objet=new Objet(identifiant,description);
-		this.listeEnchere=listeEnchere;
+		Enchere.listeEnchere=listeEnchere;
+		this.addObserver(alerteObserver);
 	}
 	
 	public Utilisateur getCreateur() {
@@ -63,10 +66,14 @@ public class Enchere {
 
 	public void setEtatPubliee() {
 		etat=ETAT.PUBLIEE;
+		setChanged();
+		notifyObservers(etat);
 		
 	}
 	public void setEtat(ETAT etat){
 		this.etat=etat;
+		setChanged();
+		notifyObservers(this.etat);
 	}
 
 	public enum ETAT {
